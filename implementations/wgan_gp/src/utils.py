@@ -117,6 +117,7 @@ def plot_losses(d_losses, g_losses, freq,
     plt.plot(epochs, d_losses)
     plt.xlabel("Iterations")
     plt.title('Discriminator Loss')
+    plt.subplot(212)
     plt.plot(epochs, g_losses)
     plt.xlabel("Iterations")
     plt.title('Generator Loss')
