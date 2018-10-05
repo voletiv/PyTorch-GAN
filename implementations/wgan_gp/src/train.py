@@ -48,14 +48,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dset", type=str, default="mnist", help="Directory of images dataset")
     parser.add_argument("--n_epochs", type=int, default=10000, help="number of epochs of training")
-    parser.add_argument("--batch_size", type=int, default=8, help="size of the batches")
+    parser.add_argument("--batch_size", type=int, default=16, help="size of the batches")
     parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
     parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
     # parser.add_argument("--channels", type=int, default=1, help="number of image channels")
     parser.add_argument("--n_critic", type=int, default=5, help="number of training steps for discriminator per iter")
     parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
-    parser.add_argument("--save_images_every_n_batches", type=int, default=10, help="interval betwen image samples")
-    parser.add_argument("--save_weights_every_n_batches", type=int, default=10, help="interval betwen weight samples")
+    parser.add_argument("--save_images_every_n_batches", type=int, default=100, help="interval betwen image samples")
+    parser.add_argument("--save_weights_every_n_batches", type=int, default=100, help="interval betwen weight samples")
     parser.add_argument("--keep_last_n_weights", type=int, default=20, help="interval betwen weight samples")
     parser.add_argument("--dont_shuffle", action="store_true", help="dont_shuffle")
     parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
@@ -112,6 +112,7 @@ if __name__ == "__main__":
 
     try:
 
+        d_losses_in_n_critic = 0
         d_losses = []
         g_losses = []
 
@@ -142,6 +143,8 @@ if __name__ == "__main__":
                 # Adversarial loss
                 d_loss = -torch.mean(real_validity) + torch.mean(fake_validity) + lambda_gp * gradient_penalty
 
+                d_losses_in_n_critic += d_loss.item()
+
                 d_loss.backward()
                 optimizer_D.step()
 
@@ -169,7 +172,8 @@ if __name__ == "__main__":
                             epoch+1, opt.n_epochs, batch+1, n_batches, d_loss.item(), g_loss.item())
                     )
 
-                    d_losses.append(d_loss.item())
+                    d_losses.append(d_losses_in_n_critic/opt.n_critic)
+                    d_losses_in_n_critic = 0
                     g_losses.append(g_loss.item())
 
                 if (epoch*n_batches + batch) % opt.save_images_every_n_batches == 0:
